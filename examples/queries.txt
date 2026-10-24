@@ -1,0 +1,6 @@
+# Multiword queries using fields actually present in the sample.
+magic fantasy
+school romance
+Yuusuke Murata
+adventure pirates
+進撃の巨人 humanity

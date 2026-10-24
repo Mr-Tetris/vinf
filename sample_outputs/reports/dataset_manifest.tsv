@@ -1,0 +1,17 @@
+name	value
+scope	data
+first_attempt_utc	2026-10-12T07:53:39.532896+00:00
+last_attempt_utc	2026-10-21T14:26:33.360056+00:00
+relevant_document	HTTP 200 HTML; primary manga detail /manga/<numeric_id>; canonical ID and title/H1; no recognized challenge or content preference gate
+discovered_unique_manga_ids	205238
+acquired_manga_ids	20573
+unavailable_manga_ids	6
+remaining_manga_ids	184659
+duplicate_alias_ids	0
+pending_manga_ids	184660
+saved_manga_ids_pending_checkpoint	1
+discovery_sources	legacy stored HTML, explicit seeds, /popular links, declared robots sitemap index and URL sets (when enabled)
+sitemap_files_acquired	10
+sitemap_files_remaining	0
+sitemap_fetches_truncated	0
+coverage	PARTIAL; acquired subset of discovered manga IDs; no complete-domain claim

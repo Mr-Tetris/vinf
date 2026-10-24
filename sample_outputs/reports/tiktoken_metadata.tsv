@@ -1,0 +1,6 @@
+name	value
+status	available
+version	0.14.0
+encoding	cl100k_base
+documents	20573
+total_tokens	1185990

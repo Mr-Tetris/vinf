@@ -1,0 +1,23 @@
+name	value
+format	manga-ir-tsv-1
+N	20573
+terms	75811
+postings	380936
+skipped_empty	0
+input_sha256	5ca36459303f47c678499ed998db0e66ade05aba6cbc1c33670e851ca9d0f99e
+normalization	html.unescape -> NFC -> casefold
+tokenizer	[^\W_]+ (Unicode)
+stopwords	none
+stemming	none
+field_weight	equal; unique values once; title,alternatives,creators,description,genres,themes
+idf_classic	ln(N/df)
+idf_smooth	ln((N+1)/(df+1))+1
+score	sum((1+ln(tf))*idf for unique known query terms); OR; numeric manga_id tie
+input:manga.tsv	2d7872e7c11378bc4c5f4f086adec1246110eb7732bb4449995821ccc9719a2d
+input:titles.tsv	ec72a73778ca9f6f96836dab74540ee307c46b50f5707310106214f573aac017
+input:creators.tsv	0e325c53037f5f4541f65bc7f978d705678e6d2feba283b67e7a61ba871b5b5d
+input:tags.tsv	44a5ab54453ec9b298e5f7d0d21bdeff17e4bcb324d82f793ad8b03fd8355a67
+sha256:documents.tsv	16023236a00848a377219f8756e15d0346f27db3a07e95998e14a9ec29ada0aa
+sha256:postings.tsv	63d01076f8c807f414c1586e800a6abc45393b625076e17556665b44fe820c78
+sha256:terms.tsv	f8aada81170b488909e65b94de89e4344787f9da88e1e322a6611e9f4d84e1f0
+sha256:skipped_documents.tsv	dc35f7c52a1eac109052c48cfc0089b9bdf56e8fa641b2597f4a46c4958996ed
