@@ -1,4 +1,4 @@
-"""An intentionally small crawl scope, based on verified site routes."""
+"""URL normalization and crawl scope."""
 
 import hashlib
 import re
@@ -8,7 +8,7 @@ from urllib.parse import parse_qsl, quote, unquote, urljoin, urlsplit, urlunspli
 
 HOST = "mangabaka.org"
 ORIGIN = f"https://{HOST}"
-# Only quoted href attributes. Exclude comments/scripts before matching attributes.
+# Attribute and tag patterns used for link extraction.
 ATTRIBUTE_RE = re.compile(r'''(?<![\w:.-])([a-zA-Z_:][\w:.-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))''')
 TAG_RE = re.compile(r'''<[a-zA-Z][\w:-]*(?:[^"'<>]|"[^"]*"|'[^']*')*>''', re.S)
 NON_LINK_RE = re.compile(r"<!--.*?-->|<(script|style)\b[^>]*>.*?</\1\s*>", re.I | re.S)
@@ -30,7 +30,7 @@ class CrawlURL:
 
 
 def extract_hrefs(document: str):
-    """Our own REGEX extractor; do not mistake data-href or script text for href."""
+    """Extract quoted href attributes outside scripts and comments."""
     for tag in TAG_RE.finditer(NON_LINK_RE.sub("", document)):
         for match in ATTRIBUTE_RE.finditer(tag.group()):
             if match.group(1).lower() == "href" and (match.group(2) is not None or match.group(3) is not None):
@@ -82,7 +82,7 @@ def normalize_url(raw: str, base: str = ORIGIN) -> CrawlURL | None:
     path = parts.path.rstrip("/")
     query = ""
     if parts.query:
-        # /search pagination was NOT verified. /popular?page=N was verified.
+        # Pagination is supported only for /popular.
         pairs = parse_qsl(parts.query, keep_blank_values=True)
         if (path != "/popular" or len(pairs) != 1 or pairs[0][0] != "page"
                 or not re.fullmatch(r"[0-9]{1,4}", pairs[0][1])):

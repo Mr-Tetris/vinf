@@ -1,4 +1,4 @@
-"""Reproduce the full offline pipeline using the 20 packaged historical snapshots."""
+"""Run the pipeline on the 20 test pages."""
 
 import argparse
 import gzip
@@ -22,7 +22,7 @@ def assemble_demo(destination):
         path = destination / 'html' / ('manga_' + row['manga_id'] + '.html')
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(raw)
-    # These are copied ORIGINAL HTTP records, not simulated/new network attempts.
+    # Keep the source HTTP metadata with the copied pages.
     write_tsv(destination / 'crawl_metadata.tsv', METADATA_FIELDS, metadata)
     write_tsv(destination / 'data_origin.tsv', ['name', 'value'], [
         {'name': 'origin', 'value': '20 packaged original historical HTML snapshots and original audit subset; no new HTTP requests'},

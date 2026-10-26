@@ -1,1 +1,1 @@
-"""Offline REGEX extraction and a small, transparent inverted index."""
+"""Manga extraction, indexing and search."""

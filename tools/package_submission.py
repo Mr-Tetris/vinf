@@ -1,4 +1,4 @@
-"""Deterministic allowlisted ZIP; no venv, full crawl, credentials or checkpoint copies."""
+"""Create the submission ZIP."""
 
 import argparse
 import hashlib
@@ -8,7 +8,7 @@ from pathlib import Path
 
 def package(output):
     root = Path(__file__).resolve().parents[1]
-    selected = [root / name for name in ['README.md', '.gitignore', 'requirements.txt', 'requirements-bonus.txt', 'konzultacia_2b_podklady.md']]
+    selected = [root / name for name in ['README.md', '.gitignore', 'requirements.txt', 'requirements-bonus.txt']]
     for name in ['crawler', 'manga_ir', 'tests', 'tools', 'examples', 'sample_outputs']:
         for path in (root / name).rglob('*'):
             if path.is_file() and '__pycache__' not in path.parts and path.suffix in {'.py', '.md', '.txt', '.tsv', '.gz'}:

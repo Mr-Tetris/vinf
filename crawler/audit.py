@@ -1,4 +1,4 @@
-"""Offline revalidation of historical HTML; never rewrites HTML or HTTP audit rows."""
+"""Check stored HTML and optionally repair processed state."""
 
 import hashlib
 from pathlib import Path

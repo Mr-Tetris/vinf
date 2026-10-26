@@ -1,4 +1,4 @@
-# Multiword queries using fields actually present in the sample.
+# Ukážkové dopyty.
 magic fantasy
 school romance
 Yuusuke Murata

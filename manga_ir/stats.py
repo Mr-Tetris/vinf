@@ -15,8 +15,7 @@ def count_bonus(documents, encoding_name):
     try:
         import tiktoken
         import tiktoken.load
-        # read_file_cached uses read_file only on a cache miss. Fail closed there:
-        # this local stats command must never download encoding data implicitly.
+        # Reject cache misses so this command stays offline.
         with patch('tiktoken.load.read_file', side_effect=RuntimeError('Encoding nie je lokálne v cache; spustite prepare-tokenizer.')):
             encoding = tiktoken.get_encoding(encoding_name)
         rows = []
@@ -48,9 +47,8 @@ def dataset_manifest(root):
     unavailable = {row['key'].split(':', 1)[1] for row in processed if row['key'].startswith('manga:') and row['state'] == 'permanent_failure'}
     aliases = {row['key'].split(':', 1)[1] for row in processed if row['key'].startswith('manga:') and row['state'] == 'duplicate'}
     waiting = {row['key'].split(':', 1)[1] for row in pending if row['key'].startswith('manga:')}
-    # Saving HTML/audit precedes the queue checkpoint. Count durable successes
-    # as acquired even across that gap; a requeued historical gate is waiting,
-    # rather than simultaneously unavailable. Expose raw pending separately.
+    # Saved responses may still be pending after an interrupted checkpoint.
+    # Keep acquired, unavailable and remaining counts separate.
     sitemap_records = read_tsv(root / 'sitemap_metadata.tsv')
     times = [row['fetched_at_utc'] for row in metadata if row['fetched_at_utc']]
     return {'scope': str(root), 'first_attempt_utc': min(times, default=''), 'last_attempt_utc': max(times, default=''),

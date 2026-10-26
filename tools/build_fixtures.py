@@ -1,4 +1,4 @@
-"""Rebuild portable full-byte gzip fixtures from the independently curated reference TSV."""
+"""Build gzip test pages from the local crawl."""
 
 import argparse
 import gzip

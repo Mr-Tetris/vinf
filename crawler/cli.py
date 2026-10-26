@@ -1,4 +1,4 @@
-"""Run with python -m crawler.cli; statistics never create an HTTP session."""
+"""Crawler command-line interface."""
 
 import argparse
 import json

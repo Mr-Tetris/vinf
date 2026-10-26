@@ -1,4 +1,4 @@
-"""Sequential breadth-first crawler. Every actual HTTP request is audited."""
+"""Sequential MangaBaka crawler."""
 
 import logging
 import math
@@ -115,7 +115,7 @@ def validate_document(response, target):
     content_type = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
     if content_type not in {"text/html", "application/xhtml+xml"}:
         return "not_html"
-    # Parse a decoded copy only; persist response.content unchanged.
+    # Validate decoded text; save the original response bytes.
     text = response.content.decode(response.encoding or "utf-8", errors="replace")
     title = re.search(r"<title\b[^>]*>(.*?)</title\s*>", text, re.I | re.S)
     heading = re.search(r"<h1\b[^>]*>(.*?)</h1\s*>", text, re.I | re.S)
@@ -147,7 +147,7 @@ class Crawler:
         if self.content_rating:
             self.session.cookies.set('content_rating', self.content_rating,
                                      domain='mangabaka.org', path='/', secure=True)
-        # No hidden urllib3 retries; every attempt passes through our rate limiter.
+        # Handle retries here so each attempt uses the rate limiter.
         self.session.mount("https://", HTTPAdapter(max_retries=0))
         self.limiter = limiter if limiter is not None else RateLimiter(config.delay_min, config.delay_max)
         self.policy = None
@@ -205,8 +205,7 @@ class Crawler:
             self.pending_keys = {row['key'] for row in self.pending}
             self.processed = {row["key"]: row for row in processed}
             self.control.update(saved_control)
-            # Restore pacing history before the fresh robots request. UTC is only
-            # a restart bridge; all active timing uses monotonic clock values.
+            # Convert saved UTC request times back to the monotonic clock.
             rate_count = int(self.control.get("request_rate_count", "0"))
             rate_window = float(self.control.get("request_rate_window", "0"))
             old_policy = RobotsPolicy(crawl_delay=float(self.control.get("crawl_delay", "0")),
@@ -216,13 +215,11 @@ class Crawler:
             for start in self.control.get("request_starts_utc", "").splitlines():
                 self.limiter.starts.append(clock_now - (wall_now - datetime.fromisoformat(start)).total_seconds())
             for row in self.pending:
-                # An exhausted temporary failure gets a fresh batch on explicit resume;
-                # interrupted batches with fewer failures retain their retry budget.
+                # Reset exhausted retries; retain partially used retry budgets.
                 if int(row["transient_failures"]) >= 3:
                     row["transient_failures"] = "0"
             self.control["robots_failures"] = "0"
-            # A durable saved attempt can precede a checkpoint. Reprocess those local
-            # bytes and their links without a network request or an overwritten file.
+            # Recover responses saved before the last checkpoint.
             self.recover_saved_attempts()
         elif any((self.storage.root / name).exists() for name in
                  ("crawl_metadata.tsv", "checkpoint.tsv", "pending_urls.tsv", "processed_urls.tsv")):
@@ -244,7 +241,7 @@ class Crawler:
                 if target and target.key == key:
                     del self.processed[key]
                     targets.append(target)
-        # Retry these before a potentially large existing sitemap queue.
+        # Put filtered titles at the front of the queue.
         for target in reversed(targets):
             if self.enqueue(target, method='content-preference-retry', priority=True):
                 self.pending[0]['error'] = 'content_filtered'
@@ -467,7 +464,7 @@ class Crawler:
                         outcome = Outcome("temporary_failure" if error == "challenge_page" else "permanent_failure",
                                           error, pause=error == "challenge_page")
                     else:
-                        # Persist before REGEX discovery. This is the unmodified byte body.
+                        # Save the response before extracting links.
                         path, size, digest = self.storage.save_html(target, response.content)
                         row.update(html_path=path, saved_bytes=size, sha256=digest, manga_id=target.manga_id,
                                    final_url=target.url)

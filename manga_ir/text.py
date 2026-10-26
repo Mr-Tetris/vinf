@@ -1,4 +1,4 @@
-"""One deterministic text composition and tokenizer for indexing and queries."""
+"""Text composition and tokenization."""
 
 import re
 import unicodedata
@@ -20,7 +20,7 @@ def tokenize(text):
 
 
 def compose_text(scalar, titles=(), creators=(), tags=()):
-    """Equal field weight; distinct values once, fixed order, no title repetition."""
+    """Join distinct field values in a fixed order."""
     values = [scalar.get('title', '')]
     values += [row['title'] for row in titles]
     values += [row['name'] for row in creators]

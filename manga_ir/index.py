@@ -1,4 +1,4 @@
-"""Own TF postings and two IDF variants. TSV inputs are streamed; postings stay in RAM."""
+"""Inverted index with classic and smoothed IDF."""
 
 import hashlib
 import math
@@ -72,7 +72,7 @@ def build_index(input_dir, output_dir):
             meta['input:' + name] = digest
         for name in ['documents.tsv', 'postings.tsv', 'terms.tsv', 'skipped_documents.tsv']:
             meta['sha256:' + name] = file_hash(temporary / name)
-        # Publish metadata last. A torn publication is rejected by hash validation.
+        # Publish hashes last to detect an interrupted write.
         for name in ['documents.tsv', 'postings.tsv', 'terms.tsv', 'skipped_documents.tsv']:
             os.replace(temporary / name, out / name)
         write_tsv(out / 'index_metadata.tsv', ['name', 'value'], ({'name': k, 'value': str(v)} for k, v in meta.items()))

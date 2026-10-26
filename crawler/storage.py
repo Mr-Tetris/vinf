@@ -54,7 +54,7 @@ def sync_directory(path):
 
 
 def write_tsv(path, fields, rows):
-    # Stream large postings/URL tables instead of retaining a second full TSV in RAM.
+    # Write rows to a temporary file before replacing the destination.
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix="." + path.name, dir=path.parent)
@@ -91,7 +91,7 @@ class Storage:
 
     @contextmanager
     def lock(self):
-        """The workspace runs on POSIX; lock prevents two writers in one output dir."""
+        """Prevent concurrent writes to the same output directory (POSIX)."""
         import fcntl
         with (self.root / ".crawler.lock").open("a") as lock:
             try:
@@ -117,8 +117,7 @@ class Storage:
     def save_html(self, target, data):
         relative = "html/" + target.filename
         path = self.root / relative
-        # A retried preference gate may already have a historical audited snapshot.
-        # Keep that immutable so its original audit row still verifies correctly.
+        # Keep older response versions referenced by the HTTP audit.
         if path.exists() and path.read_bytes() != data:
             digest = hashlib.sha256(data).hexdigest()
             relative = str(Path(relative).with_name(path.stem + '_' + digest + '.html'))
@@ -189,8 +188,7 @@ def statistics(root):
             errors[row["error"].split(":", 1)[0]] += 1
     valid = {}
     invalid = []
-    # Use durable successful metadata as well: a crash after saving HTML but before
-    # checkpoint must not erase genuinely collected pages from local statistics.
+    # Include responses saved before an interrupted queue checkpoint.
     for row in attempts:
         if row["html_path"] and not row["error"]:
             key = "manga:" + row["manga_id"] if row["manga_id"] else "list:" + row["final_url"]

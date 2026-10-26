@@ -1,4 +1,4 @@
-"""Field extraction from observed MangaBaka SSR HTML; JSON-LD is auxiliary only."""
+"""Extract manga fields from HTML with regex and JSON-LD helpers."""
 
 import hashlib
 import json
@@ -52,7 +52,7 @@ class Manga:
 
 
 def matching_jsonld(raw, manga_id):
-    """Auxiliary role/alternate-title source, selected by exact identifier, not name."""
+    """Find the ComicSeries JSON-LD object with the matching ID."""
     for match in re.finditer(r'<script\b([^>]*)>(.*?)</script\s*>', raw, re.I | re.S):
         if attrs(match[1]).get('type') != 'application/ld+json':
             continue
@@ -90,7 +90,7 @@ def extract_html(raw: bytes, source_url: str, html_path: str) -> Manga:
     title = clean_text(heading[1])
     if re.match(r'(?:404|403|error|not found|sign in|access denied)\b', title, re.I):
         raise ValueError('error_document')
-    # Primary header/meta precede Description; recommendations follow the main Tags.
+    # Limit metadata to the section before Description.
     description = DESCRIPTION_RE.search(dom, heading.end())
     meta_end = description.start() if description else dom.find('<h2', heading.end())
     if meta_end < 0:
@@ -110,7 +110,7 @@ def extract_html(raw: bytes, source_url: str, html_path: str) -> Manga:
     if scalar['description'] == 'No description available for this series.':
         scalar['description'] = ''
     result = Manga(scalar)
-    # Only language divs in the primary header, never titles in recommendation cards.
+    # Alternate titles from the primary header.
     header_end = meta.find('</header>')
     header = meta[:header_end] if header_end >= 0 else meta[:meta.find('<nav')]
     seen_titles = {title}
@@ -182,7 +182,7 @@ def extract_dataset(input_dir, output_dir, *, file=None, url=None):
                         if t.lower().startswith('<link') and attrs(t).get('rel') == 'canonical'), '')
         candidates[str(path)] = (path, url, None)
     else:
-        # Successful audit rows are authoritative; do not index arbitrary orphan HTML.
+        # Select the latest saved response for each manga ID.
         for row in read_tsv(root / 'crawl_metadata.tsv'):
             if row['manga_id'] and row['html_path'] and not row['error'] and row['http_status'] == '200':
                 candidates[row['manga_id']] = (root / row['html_path'], row['final_url'], row)
